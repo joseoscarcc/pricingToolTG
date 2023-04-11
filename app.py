@@ -1,5 +1,3 @@
-#import dash_core_components as dcc
-#import dash_html_components as html
 import dash
 from dash import dcc
 from dash import html
@@ -20,23 +18,9 @@ import numpy as np
 import plotly.graph_objects as go
 import plotly.express as px
 
-TGSites = pd.read_csv("TotalGasSites.csv")
-CompetenciaSites = pd.read_csv("CompetenciaSites.csv")
-Prices = getPrices.preciosCompetencia
-PrecioHistorico = getPrices.preciosHistoricos
-
-
-Prices["place_id"] = pd.to_numeric(Prices["place_id"])
-PrecioHistorico["place_id"] = pd.to_numeric(PrecioHistorico["place_id"])
-
-workTable = pd.merge(CompetenciaSites,Prices,left_on='place_id',right_on='place_id')
-workTable02 = pd.merge(workTable,Prices,left_on=['compite_a','product'],right_on=['place_id','product'])
-workTable02['dif'] =  workTable02['prices_x'] - workTable02['prices_y']
-wt01 = workTable02[['place_id_x', 'cre_id', 'Marca', 'distancia', 'x', 'y', 'compite_a', 'prices_x', 'product', 'dif']]
-wt01.columns = ['place_id', 'cre_id', 'Marca', 'distancia', 'x', 'y', 'compite_a', 'prices', 'product', 'dif']
-
-tableGraphs = pd.merge(CompetenciaSites,PrecioHistorico,left_on='place_id',right_on='place_id')
-tableGraphs = tableGraphs[['place_id','prices','product','date','cre_id','Marca','compite_a']]
+TGSites = getPrices.TGSites
+wt01 = getPrices.worktable
+tableGraphs = getPrices.preciosHist
 
 descargarTabla = pd.DataFrame()
 
@@ -114,12 +98,12 @@ def generate_map(dataframe,citylat,citylon):
     ])
 
 def generate_graphs(dataframe):
-    df = dataframe.pivot_table(values='prices', index=['date','Marca'], aggfunc=[np.mean])
+    df = dataframe.pivot_table(values='prices', index=['date','marca'], aggfunc=[np.mean])
     df.columns = df.columns.droplevel(0)
     df = df.reset_index()
     df = df.round(2)
     fig = px.line(df, 
-        x="date",y='prices', color='Marca',title='Precios por Marca')
+        x="date",y='prices', color='marca',title='Precios por Marca')
     return html.Div([
     dcc.Graph(figure=fig)
     ])
@@ -152,7 +136,7 @@ tab2 = html.Div([
 ])    
 
 tab3 = html.Div([
-            html.H4(children='Gráficas precios últimos 21 días'),
+            html.H4(children='Gráficas precios últimos 30 días'),
                 dcc.Dropdown(id='dropdownGraphs', options=[
                     {'label': i, 'value': i} for i in TGSites.cre_id.unique()
                 ], multi=True, placeholder='Filter by Permiso CRE...'),
@@ -296,16 +280,16 @@ def display_table(dropdown, mychecklist):
         placeIDTG = TGSites['place_id'][TGSites.cre_id.str.contains('|'.join(dropdown))]
     dff = wt01
     dff = dff[dff['compite_a'].isin(placeIDTG)]
-    table = pd.pivot_table(dff[['cre_id','Marca','prices','dif','product']], values=['prices','dif'], index=['cre_id', 'Marca'],
+    table = pd.pivot_table(dff[['cre_id','marca','prices','dif','product']], values=['prices','dif'], index=['cre_id', 'marca'],
                     columns=['product'], aggfunc=np.mean, fill_value="-")
     #coculs = ['cre_id','Marca'] + mychecklist
     table = table.reindex(columns=['prices','dif'], level=0)
-    print(mychecklist)
     table = table.reindex(columns=mychecklist, level=1)
     table.columns = table.columns.map('|'.join).str.strip('|')
     table = table.round(2)
     table = table.reset_index()
-    return generate_table(table)
+    newTable = pd.concat([table[table["marca"] == 'TOTAL GAS'],table[table['marca'] != 'TOTAL GAS']])
+    return generate_table(newTable)
 
 @app.callback(
     Output('dd-output-container', 'children'),
@@ -313,10 +297,10 @@ def display_table(dropdown, mychecklist):
     Input('productType','value'))
 def make_map(dropdownMapa, productType):
    
-    df0 = workTable[workTable['product']==productType] 
+    df0 = wt01[wt01['product']==productType] 
     placeIDTG = TGSites['place_id'][TGSites['Municipio']==dropdownMapa]
     df = df0[df0['compite_a'].isin(placeIDTG)]
-    df['text'] = df['Marca'] + ' ' + df['cre_id'] + ', Precio: ' + df['prices'].astype(str)
+    df['text'] = df['marca'] + ' ' + df['cre_id'] + ', Precio: ' + df['prices'].astype(str)
 
     if dropdownMapa == 'Juarez':
         citylat = 31.71947
