@@ -1,4 +1,9 @@
-dash
+dash==2.8.1
+dash-auth
 pandas
 requests
+flask==2.2.2
+flask-sqlalchemy==3.0.2
+flask-login
+configparser
 gunicorn
