@@ -11,7 +11,6 @@ import warnings
 import os
 from flask_login import login_user, logout_user, current_user, LoginManager, UserMixin
 import configparser
-import config as cf
 import getPrices
 import pandas as pd
 import numpy as np
@@ -27,7 +26,7 @@ descargarTabla = pd.DataFrame()
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
 warnings.filterwarnings("ignore")
-conn_string = cf.urlDB
+conn_string = os.getenv('urlDB')
 engine = create_engine(conn_string)
 db = SQLAlchemy()
 config = configparser.ConfigParser()
@@ -57,7 +56,7 @@ login_manager.login_view = '/login'
 class Users(UserMixin, Users):
     pass
 #variables
-mapbox_access_token = cf.mapbox_access_token
+mapbox_access_token = os.getenv('mapbox_access_token')
 
 def generate_table(dataframe, max_rows=20):
     return html.Table(
