@@ -15,8 +15,8 @@ conn1.autocommit = True
 cursor = conn1.cursor()
   
 sql = """
-        select s.place_id, s.cre_id, s.marca, s.x,s.y, s.prices, s.product, s.compite_a, (s.prices - precios_site.prices) as "dif"
-from (select c.place_id, c.cre_id, c.marca, c.x,c.y, p.prices, p.product, c.compite_a from competencia AS c
+        select s.id_micromercado, s.id_estacion, s.place_id, s.cre_id, s.marca, s.x,s.y, s.prices, s.product, s.compite_a, (s.prices - precios_site.prices) as "dif"
+from (select c.id_micromercado, c. id_estacion, c.place_id, c.cre_id, c.marca, c.x,c.y, p.prices, p.product, c.compite_a from competencia AS c
 left join precios_site AS p
 on c.place_id = CAST(p.place_id AS INT)
 WHERE p.date = (SELECT MAX(date) FROM precios_site)) s
@@ -26,7 +26,7 @@ on s.compite_a = CAST(precios_site.place_id AS INT) and s.product = precios_site
 WHERE precios_site.date = (SELECT MAX(date) FROM precios_site) 
 """
 sql2 = """
-    select c.place_id, c.cre_id, c.marca, p.date, p.prices, p.product, c.compite_a from competencia AS c
+    select c.id_micromercado, c. id_estacion, c.place_id, c.cre_id, c.marca, p.date, p.prices, p.product, c.compite_a from competencia AS c
 left join precios_site AS p
 on c.place_id = CAST(p.place_id AS INT)
 WHERE p.date > now() - interval '30 day'
