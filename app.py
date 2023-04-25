@@ -58,7 +58,7 @@ class Users(UserMixin, Users):
 #variables
 mapbox_access_token = os.getenv('mapbox_access_token')
 
-def generate_table(dataframe, max_rows=20):
+def generate_table(dataframe, max_rows=156):
     return html.Table(
         # Header
         [html.Tr([html.Th(col) for col in dataframe.columns])] +
@@ -279,16 +279,16 @@ def display_table(dropdown, mychecklist):
         placeIDTG = TGSites['place_id'][TGSites.cre_id.str.contains('|'.join(dropdown))]
     dff = wt01
     dff = dff[dff['compite_a'].isin(placeIDTG)]
-    table = pd.pivot_table(dff[['cre_id','marca','prices','dif','product']], values=['prices','dif'], index=['cre_id', 'marca'],
+    table = pd.pivot_table(dff[['id_micromercado','id_estacion','cre_id','marca','prices','dif','product']], values=['prices','dif'], index=['id_micromercado','id_estacion','cre_id', 'marca'],
                     columns=['product'], aggfunc=np.mean, fill_value="-")
-    #coculs = ['cre_id','Marca'] + mychecklist
     table = table.reindex(columns=['prices','dif'], level=0)
     table = table.reindex(columns=mychecklist, level=1)
     table.columns = table.columns.map('|'.join).str.strip('|')
     table = table.round(2)
     table = table.reset_index()
-    newTable = pd.concat([table[table["marca"] == 'TOTAL GAS'],table[table['marca'] != 'TOTAL GAS']])
-    return generate_table(newTable)
+    newTable = table.sort_values(['id_micromercado', 'id_estacion'],
+             ascending = [True, True])
+    return generate_table(newTable.drop(['id_micromercado', 'id_estacion'], axis=1))
 
 @app.callback(
     Output('dd-output-container', 'children'),
