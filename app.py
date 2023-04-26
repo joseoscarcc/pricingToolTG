@@ -58,7 +58,7 @@ class Users(UserMixin, Users):
 #variables
 mapbox_access_token = os.getenv('mapbox_access_token')
 
-def generate_table(dataframe, max_rows=156):
+def generate_table(dataframe, max_rows=312):
     return html.Table(
         # Header
         [html.Tr([html.Th(col) for col in dataframe.columns])] +
@@ -279,15 +279,20 @@ def display_table(dropdown, mychecklist):
         placeIDTG = TGSites['place_id'][TGSites.cre_id.str.contains('|'.join(dropdown))]
     dff = wt01
     dff = dff[dff['compite_a'].isin(placeIDTG)]
-    table = pd.pivot_table(dff[['id_micromercado','id_estacion','cre_id','marca','prices','dif','product']], values=['prices','dif'], index=['id_micromercado','id_estacion','cre_id', 'marca'],
-                    columns=['product'], aggfunc=np.mean, fill_value="-")
-    table = table.reindex(columns=['prices','dif'], level=0)
-    table = table.reindex(columns=mychecklist, level=1)
-    table.columns = table.columns.map('|'.join).str.strip('|')
-    table = table.round(2)
-    table = table.reset_index()
-    newTable = table.sort_values(['id_micromercado', 'id_estacion'],
-             ascending = [True, True])
+    table01 = pd.pivot_table(dff, values='prices', index=['id_micromercado', 'id_estacion','cre_id','marca'],
+                       columns=['product'], aggfunc=np.sum,fill_value=0)
+    table02 = pd.pivot_table(dff, values='dif', index=['id_micromercado', 'id_estacion','cre_id','marca'],
+                        columns=['product'], aggfunc=np.sum,fill_value=0)
+    table01 = table01.reset_index()
+    table01 =table01[['id_micromercado','id_estacion','cre_id','marca','regular','premium','diesel']]
+    table02 = table02.reset_index()
+    table02 =table02[['id_micromercado','id_estacion','cre_id','marca','regular','premium','diesel']]
+    newTable = pd.concat([table01,table02])
+    newTable = newTable.sort_values(['id_micromercado', 'id_estacion'], ascending = [True, True])
+    newTable = newTable.round({'regular': 2, 'premium': 2, 'diesel': 2})
+    newTable['regular']= newTable['regular'].astype(float).round(2)
+    newTable['premium']= newTable['premium'].astype(float).round(2)
+    newTable['diesel']= newTable['diesel'].astype(float).round(2)
     return generate_table(newTable.drop(['id_micromercado', 'id_estacion'], axis=1))
 
 @app.callback(
