@@ -293,7 +293,8 @@ def display_table(dropdown, mychecklist):
     newTable['regular']= newTable['regular'].astype(float).round(2)
     newTable['premium']= newTable['premium'].astype(float).round(2)
     newTable['diesel']= newTable['diesel'].astype(float).round(2)
-    return generate_table(newTable.drop(['id_micromercado', 'id_estacion'], axis=1))
+    table = newTable.drop(['id_micromercado', 'id_estacion'], axis=1)
+    return generate_table(table)
 
 @app.callback(
     Output('dd-output-container', 'children'),
