@@ -107,17 +107,17 @@ def generate_graphs(dataframe):
     dcc.Graph(figure=fig)
     ])
 
+def round_float(value):
+    if isinstance(value, float):
+        return round(value, 2)
+    else:
+        return value
+
 tab1 = html.Div([
             html.H4(children='Estaciones de Servicio Total Gas'),
-                dcc.Checklist(
-                    id='mychecklist',
-                    options = ['regular', 'premium', 'diesel'],
-                    value = ['regular'],
-                    inline=True
-                ),
                 dcc.Dropdown(id='dropdown', options=[
                     {'label': i, 'value': i} for i in TGSites.cre_id.unique()
-                ], multi=True, placeholder='Filter by Permiso CRE...'),
+                ], multi=False, placeholder='Filter by Permiso CRE...'),
                 html.Div(id='table-container'),
                 html.Button("Download CSV", id="btn_csv"),
                 dcc.Download(id="download-dataframe-csv"),
@@ -269,31 +269,29 @@ def render_content(tab):
         return tab3
 @app.callback(
     Output('table-container', 'children'),
-    Input('dropdown', 'value'),
-    Input('mychecklist','value'))
-def display_table(dropdown, mychecklist):
+    Input('dropdown', 'value'))
+def display_table(dropdown):
     global table
     if dropdown is None:
         placeIDTG = TGSites['place_id'].to_list()
     else:
-        placeIDTG = TGSites['place_id'][TGSites.cre_id.str.contains('|'.join(dropdown))]
+        placeIDTG = TGSites['place_id'][TGSites['cre_id'] == dropdown]
     dff = wt01
-    dff = dff[dff['compite_a'].isin(placeIDTG)]
-    table01 = pd.pivot_table(dff, values='prices', index=['id_micromercado', 'id_estacion','cre_id','marca'],
-                       columns=['product'], aggfunc=np.sum,fill_value=0)
-    table02 = pd.pivot_table(dff, values='dif', index=['id_micromercado', 'id_estacion','cre_id','marca'],
-                        columns=['product'], aggfunc=np.sum,fill_value=0)
+    table01 = pd.pivot_table(dff, values='prices', index=['id_micromercado', 'id_estacion','compite_a','cre_id','marca'],
+                       columns=['product'], aggfunc=np.sum,fill_value='-')
+    table02 = pd.pivot_table(dff, values='dif', index=['id_micromercado', 'id_estacion','compite_a','cre_id','marca'],
+                        columns=['product'], aggfunc=np.sum,fill_value='-')
     table01 = table01.reset_index()
-    table01 =table01[['id_micromercado','id_estacion','cre_id','marca','regular','premium','diesel']]
+    table01 =table01[['id_micromercado','id_estacion','cre_id','compite_a','marca','regular','premium','diesel']]
     table02 = table02.reset_index()
-    table02 =table02[['id_micromercado','id_estacion','cre_id','marca','regular','premium','diesel']]
+    table02 =table02[['id_micromercado','id_estacion','cre_id','compite_a','marca','regular','premium','diesel']]
     newTable = pd.concat([table01,table02])
     newTable = newTable.sort_values(['id_micromercado', 'id_estacion'], ascending = [True, True])
-    newTable = newTable.round({'regular': 2, 'premium': 2, 'diesel': 2})
-    newTable['regular']= newTable['regular'].astype(float).round(2)
-    newTable['premium']= newTable['premium'].astype(float).round(2)
-    newTable['diesel']= newTable['diesel'].astype(float).round(2)
-    table = newTable.drop(['id_micromercado', 'id_estacion'], axis=1)
+    newTable['regular']= newTable['regular'].apply(lambda x: round_float(x) if x != '-' else x)
+    newTable['premium']= newTable['premium'].apply(lambda x: round_float(x) if x != '-' else x)
+    newTable['diesel']= newTable['diesel'].apply(lambda x: round_float(x) if x != '-' else x)
+    newTable = newTable[newTable['compite_a'].isin(placeIDTG)]
+    table = newTable.drop(['id_micromercado', 'id_estacion','compite_a'], axis=1)
     return generate_table(table)
 
 @app.callback(
