@@ -22,7 +22,7 @@ on c.place_id = CAST(p.place_id AS INT)
 WHERE p.date = (SELECT MAX(date) FROM precios_site)) s
 left join 
 precios_site
-on s.compite_a = CAST(precios_site.place_id AS INT) and s.product = precios_site.product
+on s.compite_a = CAST(precios_site.place_id AS INT) 
 WHERE precios_site.date = (SELECT MAX(date) FROM precios_site) 
 """
 sql2 = """
