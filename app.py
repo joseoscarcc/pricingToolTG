@@ -278,9 +278,9 @@ def display_table(dropdown):
         placeIDTG = TGSites['place_id'][TGSites['cre_id'] == dropdown]
     dff = wt01
     table01 = pd.pivot_table(dff, values='prices', index=['id_micromercado', 'id_estacion','compite_a','cre_id','marca'],
-                       columns=['product'], aggfunc=np.sum,fill_value='-')
+                       columns=['product'], aggfunc=np.mean,fill_value='-')
     table02 = pd.pivot_table(dff, values='dif', index=['id_micromercado', 'id_estacion','compite_a','cre_id','marca'],
-                        columns=['product'], aggfunc=np.sum,fill_value='-')
+                        columns=['product'], aggfunc=np.mean,fill_value='-')
     table01 = table01.reset_index()
     table01 =table01[['id_micromercado','id_estacion','cre_id','compite_a','marca','regular','premium','diesel']]
     table02 = table02.reset_index()
