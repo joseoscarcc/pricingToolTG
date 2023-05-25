@@ -115,9 +115,14 @@ def round_float(value):
 
 tab1 = html.Div([
             html.H4(children='Estaciones de Servicio Total Gas'),
-                dcc.Dropdown(id='dropdown', options=[
-                    {'label': i, 'value': i} for i in TGSites.cre_id.unique()
-                ], multi=False, placeholder='Filter by Permiso CRE...'),
+                dcc.Dropdown(
+                    id='dropdown',
+                    options=[
+                        {'label': f"{cre_id} - {marca}", 'value': cre_id}
+                        for cre_id, marca in zip(TGSites['cre_id'], TGSites['marca'])
+                        ],
+                    multi=False,
+                    placeholder='Filter by Permiso CRE...'),
                 html.Div(id='table-container'),
                 html.Button("Download CSV", id="btn_csv"),
                 dcc.Download(id="download-dataframe-csv"),
