@@ -32,7 +32,7 @@ on c.place_id = CAST(p.place_id AS INT)
 WHERE p.date > now() - interval '30 day'
 """
 sql3 = """
-    select * from sites
+    select place_id, cre_id, marca from sites
 """
 worktable = pd.read_sql_query(sql, conn1)
 preciosHist = pd.read_sql_query(sql2,conn1)
